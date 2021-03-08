@@ -490,7 +490,7 @@ class VideoTestView(TestCase):
         self.assertEqual(response.status_code, 200)
         # TODO test with password
         v.is_restricted = False
-        v.restrict_access_to_groups = []
+        v.restrict_access_to_groups.set([])
         v.password = "password"
         v.save()
         self.client.logout()
@@ -622,7 +622,7 @@ class VideoEditTestView(TestCase):
         self.assertTrue(b"The changes have been saved." in response.content)
         v = Video.objects.get(title="VideoTest1")
         p = re.compile(r'^videos/([\d\w]+)/file([_\d\w]*).mp4$')
-        self.assertRegexpMatches(v.video.name, p)
+        self.assertRegex(v.video.name, p)
         # new one
         videofile = SimpleUploadedFile(
             "file.mp4", b"file_content", content_type="video/mp4")
@@ -656,7 +656,9 @@ class VideoEditTestView(TestCase):
                 'additional_owners': [self.user.pk]
             }, follow=True)
         self.assertEqual(response.status_code, 200)
+        print(response.content)
         self.assertTrue(b"The changes have been saved." in response.content)
+
         v = Video.objects.get(title="VideoTest3")
         self.assertEqual(v.description, '<p>bl</p>')
         videofile = SimpleUploadedFile(

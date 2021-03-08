@@ -32,12 +32,11 @@ INSTALLED_APPS = [
     'tagging',
     'cas',
     'captcha',
-    'progressbarupload',
     'rest_framework',
     'rest_framework.authtoken',
     'django_filters',
     'lti_provider',
-    'select2',
+    'django_select2',
     # Pod Applications
     'pod.main',
     'django.contrib.admin',  # put it here for template override
@@ -53,9 +52,10 @@ INSTALLED_APPS = [
     'pod.recorder',
     'pod.lti',
     'pod.custom',
+    'pod.bbb',
     'shibboleth',
     'chunked_upload',
-    'pod.bbb',
+
 ]
 
 ##
@@ -67,8 +67,6 @@ MIDDLEWARE = [
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    # Django 3.1 starts to support SameSite middleware
-    'django_cookies_samesite.middleware.CookiesSameSite',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -79,6 +77,7 @@ MIDDLEWARE = [
 
 AUTHENTICATION_BACKENDS = (
     'pod.main.auth_backend.SiteBackend',
+
 )
 
 ##
@@ -199,9 +198,24 @@ LOGGING = {
     },
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    },
+    # … default cache config and others
+    "select2": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/2",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
+# Tell select2 which cache configuration to use:
+SELECT2_CACHE_BACKEND = "select2"
+
 MODELTRANSLATION_FALLBACK_LANGUAGES = ('fr', 'en', 'nl')
-
-
 ##
 # Applications settings (and settings locale if any)
 #
@@ -230,7 +244,6 @@ for application in INSTALLED_APPS:
 #
 if 'USE_CAS' in globals() and eval('USE_CAS') is True:
     AUTHENTICATION_BACKENDS = (
-        'pod.main.auth_backend.SiteBackend',
         'cas.backends.CASBackend',
     )
     CAS_RESPONSE_CALLBACKS = (
